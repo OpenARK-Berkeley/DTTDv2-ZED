@@ -66,7 +66,19 @@ DTTD_Dataset
 ```
 
 
-## Requirements
+## What you Need to Collect your own Data
+ 1. OptiTrack Motion Capture system with Motive tracking software
+	* This doesn't have to be running on the same computer as the other sensors. We will export the tracked poses to a CSV file.
+	* Create a rigid body to track a camera's OptiTrack markers, give the rigid body the same name that is passed into `tools/capture_data.py`
+ 2. Microsoft Azure Kinect
+	* We interface with the camera using Microsoft's K4A SDK: https://github.com/microsoft/Azure-Kinect-Sensor-SDK
+ 3. iPhone 12 Pro / iPhone 13 (to be released...)
+	* Please build the project in `iphone_app/` in XCode and install on the mobile device.
+ 4. ZED 2.0
+ 	* Please download [ZED SDK 4.0](https://www.stereolabs.com/developers/release/) and read the [ZED API document](https://github.com/stereolabs/zed-python-api) for environment configuration.
+
+
+## Dependency
 
 Before running our data generation and annotation pipeline, you can activate a __conda__ environment where Python Version >= 3.7:
 ```
@@ -74,7 +86,7 @@ conda create --name [YOUR ENVIR NAME] python = [PYTHON VERSION]
 conda activate [YOUR ENVIR NAME]
 ```
 
-then install all necessary packages:
+then install all necessary packages (You might need to install ZED SDK 4.0 and Azure Kinect SDK first):
 ```
 pip install -r requirements.txt
 ```
@@ -100,17 +112,6 @@ pip install -r requirements.txt
 * **toolbox**: package to generate data for model training
 * **tools**: commands for running the pipelines. Details in **tools/README.md**.
 * **utils**: utils package
-
-## What you Need to Collect your own Data
- 1. OptiTrack Motion Capture system with Motive tracking software
-	* This doesn't have to be running on the same computer as the other sensors. We will export the tracked poses to a CSV file.
-	* Create a rigid body to track a camera's OptiTrack markers, give the rigid body the same name that is passed into `tools/capture_data.py`
- 2. Microsoft Azure Kinect
-	* We interface with the camera using Microsoft's K4A SDK: https://github.com/microsoft/Azure-Kinect-Sensor-SDK
- 3. iPhone 12 Pro / iPhone 13 (to be released...)
-	* Please build the project in `iphone_app/` in XCode and install on the mobile device.
- 4. ZED 2.0
- 	* Please download [ZED SDK 4.0](https://www.stereolabs.com/developers/release/) and read the [ZED API document](https://github.com/stereolabs/zed-python-api) for environment configuration.
 
 ## Data Collection Pipeline (for ZED 2.0)
 Link to tutorial video: https://youtu.be/ioKmeriW650. 
