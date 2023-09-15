@@ -112,7 +112,7 @@ pip install -r requirements.txt
  4. ZED 2.0
  	* Please download [ZED SDK 4.0](https://www.stereolabs.com/developers/release/) and read the [ZED API document](https://github.com/stereolabs/zed-python-api) for SDK and environment configuration.
 
-## Data Collection Pipeline (for Azure Kinect)
+## Data Collection Pipeline (for ZED 2.0)
 Link to tutorial video: https://youtu.be/ioKmeriW650. 
 
 ### Configuration & Setup
