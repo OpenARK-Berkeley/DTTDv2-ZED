@@ -1,4 +1,4 @@
-# DTTD: Digital Twin Tracking Dataset Official Repository
+# DTTDv2-ZED: Digital Twin Tracking Dataset Official Repository
 
 ## Overview
 
