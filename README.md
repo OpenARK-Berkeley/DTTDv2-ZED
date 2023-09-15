@@ -110,7 +110,7 @@ pip install -r requirements.txt
  3. iPhone 12 Pro / iPhone 13 (to be released...)
 	* Please build the project in `iphone_app/` in XCode and install on the mobile device.
  4. ZED 2.0
- 	* Please download [ZED SDK 4.0](https://www.stereolabs.com/developers/release/) and read the [ZED API document](https://github.com/stereolabs/zed-python-api) for SDK and environment configuration.
+ 	* Please download [ZED SDK 4.0](https://www.stereolabs.com/developers/release/) and read the [ZED API document](https://github.com/stereolabs/zed-python-api) for environment configuration.
 
 ## Data Collection Pipeline (for ZED 2.0)
 Link to tutorial video: https://youtu.be/ioKmeriW650. 
