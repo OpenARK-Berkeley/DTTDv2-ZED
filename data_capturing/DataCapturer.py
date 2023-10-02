@@ -13,8 +13,20 @@ Press (q) to quit.
 import cv2
 import numpy as np
 from pygame import mixer
-from pyk4a import PyK4A
 import yaml
+import ogl_viewer.viewer as gl
+
+try:
+    from pyk4a import PyK4A
+except ImportError:
+    print("WARNING: PyK4A to support azure_kinect import failed!")
+    pass
+
+try:
+    import pyzed.sl as sl
+except ImportError:
+    print("WARNING: PyZED.sl to support azure_kinect import failed!")
+    pass
 
 import os, sys 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -28,8 +40,43 @@ CALIBRATION_KEY_END = 'p'
 CAPTURE_KEY_START = 'd'
 QUIT_KEY = 'q'
 
-class AzureKinectDataCapturer():
-    def __init__(self, scene_dir, camera_name):
+class DataCaptureDevice():
+    def __init__(self, device_type):
+        self.device_type = device_type
+        if self.device_type == "azure_kinect":
+            self.k4a = PyK4A()
+        elif self.device_type == "zed_2":
+            self.zed = sl.Camera()
+        else:
+            print("Device type is not recognized: available types are \"azure_kinect\", \"zed_2\".")
+            raise NotImplementedError
+    def start_camera(self):
+        if self.device_type == "azure_kinect":
+            self.k4a.start()
+        elif self.device_type == "zed_2":
+            init = sl.InitParameters(depth_mode=sl.DEPTH_MODE.ULTRA,
+                                 coordinate_units=sl.UNIT.METER,
+                                 coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP)
+            status = self.zed.open(init)
+            if status != sl.ERROR_CODE.SUCCESS:
+                print(repr(status))
+                exit()
+    def get_capture(self):
+        if self.device_type == "azure_kinect":
+            return self.k4a.get_capture()
+        elif self.device_type == "zed_2":
+            point_cloud = sl.Mat()
+            self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA, sl.MEM.CPU)
+            # TODO: convert point_cloud to correct output shape
+    def stop_camera(self):
+        if self.device_type == "azure_kinect":
+            self.k4a.stop()
+        elif self.device_type == "zed_2":
+            self.zed.close()
+
+
+class DataCapturer():
+    def __init__(self, scene_dir, camera_name, device_type="azure_kinect"):
         self.scene_dir = scene_dir
         if not os.path.isdir(scene_dir):
             os.mkdir(scene_dir)
@@ -37,14 +84,14 @@ class AzureKinectDataCapturer():
             print("Warning! Scene already exists. May overwrite data.")
 
         self.camera_name = camera_name
-
+        self.capture_device = DataCaptureDevice(device_type=device_type)
         #camera needs to exist
         dir_path = os.path.dirname(os.path.realpath(__file__))
         assert(os.path.isdir(os.path.join(dir_path, "..", "cameras", camera_name)))
 
     @staticmethod
-    def collect_and_write_data(k4a, data_file, frame_id, frames_dir):
-        capture = k4a.get_capture()
+    def collect_and_write_data(capture_device: DataCaptureDevice, data_file, frame_id, frames_dir):
+        capture = capture_device.get_capture()
         cur_timestamp = capture.color_timestamp_usec / 1000000.
 
         color_image = capture.color[:,:,:3]
@@ -68,9 +115,8 @@ class AzureKinectDataCapturer():
         capture_start_frame_id = -1
         frame_id = 0
 
-        # start Azure Kinect camera
-        k4a = PyK4A()
-        k4a.start()
+        # start camera
+        self.capture_device.start_camera()
 
         # output
         data_file = open(os.path.join(self.scene_dir, "camera_data.csv"), "w")
@@ -131,28 +177,28 @@ class AzureKinectDataCapturer():
                 break
 
             if (calibration_start_frame_id > -1 and calibration_end_frame_id == -1) or capture_start_frame_id > -1:
-                self.collect_and_write_data(k4a, data_file, frame_id, frames_dir)
+                self.collect_and_write_data(self.capture_device, data_file, frame_id, frames_dir)
                 frame_id += 1
 
         meta_file.write("{0},{1},{2}\n".format(calibration_start_frame_id, calibration_end_frame_id, capture_start_frame_id))
 
         meta_file.close()
         data_file.close()
+        self.capture_device.stop_camera()
 
         print("All data saved!")
         print("Run process_data to perform synchronization and extract capture phase.")
         print("Additionally, please fill scene_meta.yaml with the objects that are in this scene.")
 
     @staticmethod
-    def capture_single_frame():
+    def capture_single_frame(capture_device: DataCaptureDevice):
         # start Azure Kinect camera
-        k4a = PyK4A()
-        k4a.start()
+        capture_device.start_camera()
 
         print("Press enter to capture.")
 
         while True:
-            capture = k4a.get_capture()
+            capture = capture_device.get_capture()
 
             color_image = capture.color[:,:,:3]
             depth_image = capture.transformed_depth
@@ -165,5 +211,5 @@ class AzureKinectDataCapturer():
             # Enter
             if cv2.waitKey(1) == 13:
                 break
-
+        capture_device.stop_camera()
         return color_image, depth_image
