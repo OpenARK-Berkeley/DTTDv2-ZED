@@ -37,9 +37,10 @@ Places the calculated extrinsic into `cameras/******/extrinsic.txt`. The name of
 Capture data for a scene (either data collection or extrinsic calculation). Captures RGB, depth, and meta data.
 
 ### Arguments
- 1. `camera`: Required argument corresponding to the name of the camera used in this scene capture. Should match a name of a folder within `cameras/`
- 2. `--scene_name`: Name of scene if creating a data collection scene, or if creating a named extrinsic scene
- 3. `--extrinsic`: Creating an extrinsic calculation scene. Output will now be placed in `EXTRINSICS_DIR` instead of `SCENE_DIR`
+ 1. `camera_name`: Required argument corresponding to the name of the camera used in this scene capture. Should match a name of a folder within `cameras/`
+ 2. `camera_type`: Required argument corresponding to the type of the camera used. Currently supporting `azure_kinect` and `zed_2`.
+ 3. `--scene_name`: Name of scene if creating a data collection scene, or if creating a named extrinsic scene
+ 4. `--extrinsic`: Creating an extrinsic calculation scene. Output will now be placed in `EXTRINSICS_DIR` instead of `SCENE_DIR`
 
 ### Outputs
 
@@ -53,7 +54,7 @@ The `scene_meta.yaml`
 
 ### Class Dependencies
 
- 1. `AzureKinectDataCapturer`: For now, this is the only camera we support.
+ 1. `DataCapturer`: For now, we support Azure Kinect camera and ZED 2 camera. Switch this using the `device_type` argument
 
 ## create_video.py
 

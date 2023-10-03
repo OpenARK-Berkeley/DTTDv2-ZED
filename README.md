@@ -114,7 +114,7 @@ pip install -r requirements.txt
 * **utils**: utils package
 
 ## Data Collection Pipeline (for ZED 2.0)
-Link to tutorial video: https://youtu.be/ioKmeriW650. 
+Link to tutorial video: https://youtu.be/ioKmeriW650.
 
 ### Configuration & Setup
   1. Place ARUCO marker somewhere visible
@@ -123,7 +123,7 @@ Link to tutorial video: https://youtu.be/ioKmeriW650.
 
 ### Record Data (`tools/capture_data.py`)
   1. Data collection
-      * If extrinsic scene, data collection phase should be spent observing ARUCO marker, run `tools/capture_data.py --extrinsic`
+      * If extrinsic scene, data collection phase should be spent observing ARUCO marker, run `tools/capture_data.py --extrinsic az_camera1`
   2. Example data collection scene (not extrinsic): `python tools/capture_data.py --scene_name test az_camera1`
 
 ### Data Recording Process

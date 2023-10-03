@@ -13,7 +13,11 @@ Press (q) to quit.
 import cv2
 import numpy as np
 from pygame import mixer
+from collections import namedtuple
 import yaml
+import sys
+sys.path.append("../")
+
 import ogl_viewer.viewer as gl
 
 try:
@@ -55,8 +59,9 @@ class DataCaptureDevice():
             self.k4a.start()
         elif self.device_type == "zed_2":
             init = sl.InitParameters(depth_mode=sl.DEPTH_MODE.ULTRA,
-                                 coordinate_units=sl.UNIT.METER,
-                                 coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP)
+                                 coordinate_units=sl.UNIT.MILLIMETER,
+                                 coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP,
+                                 camera_resolution=sl.RESOLUTION.HD2K)
             status = self.zed.open(init)
             if status != sl.ERROR_CODE.SUCCESS:
                 print(repr(status))
@@ -65,9 +70,23 @@ class DataCaptureDevice():
         if self.device_type == "azure_kinect":
             return self.k4a.get_capture()
         elif self.device_type == "zed_2":
-            point_cloud = sl.Mat()
-            self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA, sl.MEM.CPU)
-            # TODO: convert point_cloud to correct output shape
+            runtime_parameters = sl.RuntimeParameters(enable_fill_mode=True)
+            # point cloud and depth are aligned on the left image
+            left_image = sl.Mat() # H * W * 4 (R,G,B,A)
+            point_cloud = sl.Mat() # H * W * 4 (X,Y,Z,?) (mm, as specified above in init)
+            depth = sl.Mat() # H * W (mm)
+            if not (self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS):
+                return None
+            self.zed.retrieve_image(left_image, sl.VIEW.LEFT)
+            self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
+            self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
+            CaptureData = namedtuple('CaptureData', ['color_timestamp_usec','color','transformed_depth'])
+            
+            color_timestamp_usec = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT).get_microseconds()
+            color = left_image.get_data() # get numpy array
+            transformed_depth = np.round(depth.get_data()).astype(np.uint16)
+            return CaptureData(color_timestamp_usec, color, transformed_depth)
+            
     def stop_camera(self):
         if self.device_type == "azure_kinect":
             self.k4a.stop()

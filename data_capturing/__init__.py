@@ -1,1 +1,1 @@
-from .DataCapturer import AzureKinectDataCapturer
+from .DataCapturer import DataCapturer

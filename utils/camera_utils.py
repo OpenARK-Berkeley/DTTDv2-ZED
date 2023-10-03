@@ -43,6 +43,13 @@ def load_distortion_static(camera_name):
     # iPhone images are already undistorted upon capture
     elif "iphone" in camera_name:
         return None
+    elif "zed" in camera_name:
+        # TODO: know if we need to add distortion static for zed camera.
+        # Azure kinect code is temporarily copied.
+        camera_path = os.path.join(cameras_dir, camera_name)
+        assert(os.path.isdir(camera_path))
+        distortion_path = os.path.join(camera_path, "distortion.txt")
+        return np.loadtxt(distortion_path)
     else:
         raise "Unsupported camera {0}".format(camera_name)
 
