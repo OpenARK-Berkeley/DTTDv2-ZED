@@ -13,7 +13,7 @@ Press (q) to quit.
 import cv2
 import numpy as np
 from pygame import mixer
-from collections import namedtuple
+from typing import NamedTuple
 import yaml
 import sys
 sys.path.append("../")
@@ -66,6 +66,8 @@ class DataCaptureDevice():
             if status != sl.ERROR_CODE.SUCCESS:
                 print(repr(status))
                 exit()
+            else:
+                print("ZED Camera ON...")
     def get_capture(self):
         if self.device_type == "azure_kinect":
             return self.k4a.get_capture()
@@ -79,20 +81,18 @@ class DataCaptureDevice():
                 return None
             self.zed.retrieve_image(left_image, sl.VIEW.LEFT)
             self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
-            self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
-            CaptureData = namedtuple('CaptureData', ['color_timestamp_usec','color','transformed_depth'])
-            
+            self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)            
             color_timestamp_usec = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT).get_microseconds()
-            color = left_image.get_data() # get numpy array
-            transformed_depth = np.round(depth.get_data()).astype(np.uint16)
-            return CaptureData(color_timestamp_usec, color, transformed_depth)
+            color = np.copy(left_image.get_data()) # get numpy array
+            transformed_depth = np.copy(np.round(depth.get_data()).astype(np.uint16))
+            CaptureData = NamedTuple('CaptureData', color=np.ndarray, color_timestamp_usec=int, transformed_depth=np.ndarray)
+            return CaptureData(color, color_timestamp_usec, transformed_depth)
             
     def stop_camera(self):
         if self.device_type == "azure_kinect":
             self.k4a.stop()
         elif self.device_type == "zed_2":
             self.zed.close()
-
 
 class DataCapturer():
     def __init__(self, scene_dir, camera_name, device_type="azure_kinect"):
@@ -108,9 +108,8 @@ class DataCapturer():
         dir_path = os.path.dirname(os.path.realpath(__file__))
         assert(os.path.isdir(os.path.join(dir_path, "..", "cameras", camera_name)))
 
-    @staticmethod
-    def collect_and_write_data(capture_device: DataCaptureDevice, data_file, frame_id, frames_dir):
-        capture = capture_device.get_capture()
+    def collect_and_write_data(self, data_file, frame_id, frames_dir):
+        capture = self.capture_device.get_capture()
         cur_timestamp = capture.color_timestamp_usec / 1000000.
 
         color_image = capture.color[:,:,:3]
@@ -196,7 +195,7 @@ class DataCapturer():
                 break
 
             if (calibration_start_frame_id > -1 and calibration_end_frame_id == -1) or capture_start_frame_id > -1:
-                self.collect_and_write_data(self.capture_device, data_file, frame_id, frames_dir)
+                self.collect_and_write_data(data_file, frame_id, frames_dir)
                 frame_id += 1
 
         meta_file.write("{0},{1},{2}\n".format(calibration_start_frame_id, calibration_end_frame_id, capture_start_frame_id))

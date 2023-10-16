@@ -41,7 +41,7 @@ def main():
         
         save_dir = os.path.join(SCENES_DIR, args.scene_name)
 
-    data_capturer = DataCapturer(save_dir, args.camera_name, args.camera_type)
+    data_capturer = DataCapturer(scene_dir=save_dir, camera_name=args.camera_name, device_type=args.camera_type)
     data_capturer.start_capture()
 
 if __name__ == "__main__":

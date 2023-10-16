@@ -9,3 +9,4 @@ pandas
 open3d
 scipy
 statsmodels==0.13.2
+requests
