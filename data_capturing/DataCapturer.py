@@ -4,7 +4,7 @@ A scene consists of a calibration phase and a data capture scene.
 The calibration phase should involve a sequnce of frames with the camera observing the ARUCO marker.
 The data capture phase should follow the calibration phase in one continuous frame stream.
 
-Press (c) to start calibration phase. 
+Press (c) to start calibration phase.
 Press (d) to start data capture phase.
 Press (q) to quit.
 
@@ -32,67 +32,18 @@ except ImportError:
     print("WARNING: PyZED.sl to support azure_kinect import failed!")
     pass
 
-import os, sys 
+import os, sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(dir_path, ".."))
 
 from utils.camera_utils import write_static_intrinsic, write_static_distortion
 from utils.frame_utils import write_bgr, write_depth
+from data_capturing.DataCaptureDevice import DataCaptureDevice
 
 CALIBRATION_KEY_START = 'c'
 CALIBRATION_KEY_END = 'p'
 CAPTURE_KEY_START = 'd'
 QUIT_KEY = 'q'
-
-class DataCaptureDevice():
-    def __init__(self, device_type):
-        self.device_type = device_type
-        if self.device_type == "azure_kinect":
-            self.k4a = PyK4A()
-        elif self.device_type == "zed_2":
-            self.zed = sl.Camera()
-        else:
-            print("Device type is not recognized: available types are \"azure_kinect\", \"zed_2\".")
-            raise NotImplementedError
-    def start_camera(self):
-        if self.device_type == "azure_kinect":
-            self.k4a.start()
-        elif self.device_type == "zed_2":
-            init = sl.InitParameters(depth_mode=sl.DEPTH_MODE.ULTRA,
-                                 coordinate_units=sl.UNIT.MILLIMETER,
-                                 coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP,
-                                 camera_resolution=sl.RESOLUTION.HD2K)
-            status = self.zed.open(init)
-            if status != sl.ERROR_CODE.SUCCESS:
-                print(repr(status))
-                exit()
-            else:
-                print("ZED Camera ON...")
-    def get_capture(self):
-        if self.device_type == "azure_kinect":
-            return self.k4a.get_capture()
-        elif self.device_type == "zed_2":
-            runtime_parameters = sl.RuntimeParameters(enable_fill_mode=False)
-            # point cloud and depth are aligned on the left image
-            left_image = sl.Mat() # H * W * 4 (R,G,B,A)
-            point_cloud = sl.Mat() # H * W * 4 (X,Y,Z,?) (mm, as specified above in init)
-            depth = sl.Mat() # H * W (mm)
-            if not (self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS):
-                return None
-            self.zed.retrieve_image(left_image, sl.VIEW.LEFT)
-            self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
-            self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)            
-            color_timestamp_usec = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT).get_microseconds()
-            color = np.copy(left_image.get_data()) # get numpy array
-            transformed_depth = np.copy(np.round(depth.get_data()).astype(np.uint16))
-            CaptureData = NamedTuple('CaptureData', color=np.ndarray, color_timestamp_usec=int, transformed_depth=np.ndarray)
-            return CaptureData(color, color_timestamp_usec, transformed_depth)
-            
-    def stop_camera(self):
-        if self.device_type == "azure_kinect":
-            self.k4a.stop()
-        elif self.device_type == "zed_2":
-            self.zed.close()
 
 class DataCapturer():
     def __init__(self, scene_dir, camera_name, device_type="azure_kinect"):
@@ -125,8 +76,7 @@ class DataCapturer():
 
         data_file.write("{0},{1}\n".format(frame_id, cur_timestamp))
 
-    def start_capture(self):   
-
+    def start_capture(self):
         # state
         calibration_start_frame_id = -1
         calibration_end_frame_id = -1
@@ -165,12 +115,12 @@ class DataCapturer():
         cv2.namedWindow("Depth Image", cv2.WINDOW_NORMAL)
 
         #play sound when state transitions
-        mixer.init() 
+        mixer.init()
         sound_file = os.path.join(dir_path, "sound.mp3")
         sound=mixer.Sound(sound_file)
 
         while True:
-            if cv2.waitKey(1) == ord(CALIBRATION_KEY_START) and calibration_start_frame_id == -1: 
+            if cv2.waitKey(1) == ord(CALIBRATION_KEY_START) and calibration_start_frame_id == -1:
                 print("Calibration start frame_id is {}".format(frame_id))
                 sound.play()
                 calibration_start_frame_id = frame_id
@@ -210,7 +160,7 @@ class DataCapturer():
 
     @staticmethod
     def capture_single_frame(capture_device: DataCaptureDevice):
-        # start Azure Kinect camera
+        # start camera
         capture_device.start_camera()
 
         print("Press enter to capture.")
