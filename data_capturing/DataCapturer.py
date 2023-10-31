@@ -72,7 +72,7 @@ class DataCaptureDevice():
         if self.device_type == "azure_kinect":
             return self.k4a.get_capture()
         elif self.device_type == "zed_2":
-            runtime_parameters = sl.RuntimeParameters(enable_fill_mode=True)
+            runtime_parameters = sl.RuntimeParameters(enable_fill_mode=False)
             # point cloud and depth are aligned on the left image
             left_image = sl.Mat() # H * W * 4 (R,G,B,A)
             point_cloud = sl.Mat() # H * W * 4 (X,Y,Z,?) (mm, as specified above in init)

@@ -214,7 +214,7 @@ class CameraPoseSynchronizer():
         op_interpd_final -= np.mean(op_interpd_final)
 
         if show_sync_plot:
-            plt.scatter(camera_times_final, camera_pos_zero_meaned, label="az final")
+            plt.scatter(camera_times_final, camera_pos_zero_meaned, label="camera final")
             plt.scatter(camera_times_final, op_interpd_final, label="op final")
             plt.legend()
             plt.show()

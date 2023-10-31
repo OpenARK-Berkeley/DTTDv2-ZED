@@ -128,6 +128,8 @@ def write_scene_intrinsics(camera_name, scene_dir, frame_intrinsics, raw):
         write_static_intrinsic(camera_name, scene_dir, raw)
     elif "iphone" in camera_name:
         write_frame_intrinsics(camera_name, scene_dir, frame_intrinsics, raw)
+    elif "zed" in camera_name:
+        write_static_intrinsic(camera_name, scene_dir, raw)
     else:
         raise "Unknown camera type {0}".format(camera_name)
 
@@ -136,6 +138,8 @@ def write_scene_distortions(camera_name, scene_dir, frame_distortions, raw):
         write_static_distortion(camera_name, scene_dir, raw)
     elif "iphone" in camera_name:
         write_frame_distortions(camera_name, scene_dir, frame_distortions, raw)
+    elif "zed" in camera_name:
+        write_static_distortion(camera_name, scene_dir, raw)
     else:
         raise "Unknown camera type {0}".format(camera_name)
 
