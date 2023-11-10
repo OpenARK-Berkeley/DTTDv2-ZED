@@ -19,7 +19,7 @@ This code assumes you have run clean_camera_poses and synchronize_camera_poses a
 
 import argparse
 
-import os, sys 
+import os, sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(dir_path, ".."))
 
@@ -53,8 +53,8 @@ def main():
     synchronized_poses = convert_pose_df_to_dict(synchronized_poses)
 
     extrinsic = cam_opti_extr_calc.calculate_extrinsic(scene_dir, synchronized_poses, write_to_file=True)
-    
+
     print("computed extrinsic:", extrinsic)
-    
+
 if __name__ == "__main__":
     main()

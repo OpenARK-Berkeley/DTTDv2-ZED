@@ -5,7 +5,7 @@ from scipy.spatial.transform import Rotation as R
 from tqdm import tqdm
 import yaml
 
-import os, sys 
+import os, sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(dir_path, ".."))
 
@@ -36,7 +36,7 @@ class CameraOptiExtrinsicCalculator():
 
         print(np.linalg.det(opti_to_aruco))
         print(opti_to_aruco.T @ opti_to_aruco)
-        
+
         # Round since there is probably error in opti marker position leading to non-orthogonal aruco_x and aruco_y
         opti_to_aruco = R.from_matrix(opti_to_aruco).as_matrix()
 
@@ -63,6 +63,24 @@ class CameraOptiExtrinsicCalculator():
         affine_transform_opti = aff @ opti_to_aruco #1. opti -> aruco 2. aruco -> camera = opti -> camera
         return invert_affine(affine_transform_opti) #camera -> opti
 
+    # Let’s denote the ARUCO marker as Ar, the OptiTrack system as Opti, the Camera internal sensor as Se,
+    # and the outer frame of the camera with reflective bulbs as Fr.
+    # Here’s the calibration process (we want to get the extrinsics, which is the Se->Fr transformation here.
+    # What we have before the calculation are Opti->Fr, Opti->Ar, and the camera raw data)
+    # 1. We synchronize the Opti->Fr with the camera raw data using the timestamps.
+    # 2. For each frame, we calculate the Ar->Se with the opencv API.
+    # 3. For each frame, we now have Opti->Fr, Opti->Ar, Ar->Se. With matrix cascading and inversion, we can have Se->Fr for each frame.
+    # 4. An assumption is taken that the start frame has the most accurate prediction of Se->Fr, we denote this prediction as Se_0->Fr_0.
+    #    We then calculate the difference between Fr_i->Se_i @ Se_0 -> Fr_0, which should ideally be an identity matrix. We eliminate some of the
+    #    frames with too high difference in either rotation or translation.
+    # 5. We calculate the average translation and rotation (quaternion) within the filtered frames, and take that as our resulting extrinsics.
+    # 6. When we plot the videos, we plot two videos.
+    #   1) The first is only prediction using opencv API, which is entirely stable and accurate, representing the Ar->Se.
+    #   2) The second is utilizing the outer path, which is inv(Se->Fr->Opti->Ar) for each frame. This is the unstable one.
+    #
+    # Notice that On the first frame of calibration (when starting to rotate around the object (after pressing 'd')),
+    #  there were some reflective bulbs on the camera frame that were not correctly detected by the OptiTrack systems.
+    #  This can result in a bad result per the assumption in step 4.
     def calculate_extrinsic(self, scene_dir, synchronized_poses, write_to_file=False):
 
         scene_metadata_file = os.path.join(scene_dir, "scene_meta.yaml")
@@ -97,16 +115,17 @@ class CameraOptiExtrinsicCalculator():
                 rvec, tvec, _ = aruco_pose
 
                 rvec, tvec = rvec.squeeze(), tvec.squeeze()
-
+                # using inv(opti->aruco->camera)
                 camera_sensor_to_opti_transform = self.calculate_camera_to_opti_transform(rvec, tvec)
 
                 camera_sensor_to_opti_transforms.append(camera_sensor_to_opti_transform)
+                # using inv(opti->camera_frame)
                 virtual_camera_to_opti_transforms.append(opti_pose)
-            
+
             else:
                 total_frames_skipped += 1
                 print("frame {0} did not successfully find ARUCO marker. Therefore it has been skipped. Total Frames Skipped: {1}".format(frame_id, total_frames_skipped))
-            
+
         #extrinsic from virtual to camera sensor
         extrinsics = []
 
@@ -133,7 +152,7 @@ class CameraOptiExtrinsicCalculator():
 
         for x in range(1, len(extrinsics)):
             rotation_diff = np.arccos((np.trace(extrinsics[x][:3,:3] @ np.linalg.inv(extrinsics_filtered[-1][:3,:3])) - 1.) / 2.)
-            
+
             if np.isnan(rotation_diff):
                 rotation_diff = 1.
 
@@ -190,7 +209,7 @@ class CameraOptiExtrinsicCalculator():
         """
         Evaluate extrinsic
         """
-        
+
         cv2.namedWindow("computed extrinsic validation")
         cv2.namedWindow("original ARUCO")
         opti_to_aruco = invert_affine(self.get_aruco_to_opti_transform())
