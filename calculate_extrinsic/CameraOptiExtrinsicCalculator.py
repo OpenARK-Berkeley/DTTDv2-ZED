@@ -82,7 +82,7 @@ class CameraOptiExtrinsicCalculator():
     #  there were some reflective bulbs on the camera frame that were not correctly detected by the OptiTrack systems.
     #  This can result in a bad result per the assumption in step 4.
     def calculate_extrinsic(self, scene_dir, synchronized_poses, write_to_file=False):
-
+        # scene_meta contains the name of the camera and the scale
         scene_metadata_file = os.path.join(scene_dir, "scene_meta.yaml")
         with open(scene_metadata_file, 'r') as file:
             scene_metadata = yaml.safe_load(file)
@@ -119,7 +119,7 @@ class CameraOptiExtrinsicCalculator():
                 camera_sensor_to_opti_transform = self.calculate_camera_to_opti_transform(rvec, tvec)
 
                 camera_sensor_to_opti_transforms.append(camera_sensor_to_opti_transform)
-                # using inv(opti->camera_frame)
+                # using inv(opti->camera)
                 virtual_camera_to_opti_transforms.append(opti_pose)
 
             else:

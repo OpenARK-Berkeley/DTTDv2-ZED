@@ -37,7 +37,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(dir_path, ".."))
 
 from utils.camera_utils import write_static_intrinsic, write_static_distortion
-from utils.frame_utils import write_bgr, write_depth
+from utils.frame_utils import write_bgr, write_depth, write_confidence
 from data_capturing.DataCaptureDevice import DataCaptureDevice
 
 CALIBRATION_KEY_START = 'c'
@@ -65,14 +65,20 @@ class DataCapturer():
 
         color_image = capture.color[:,:,:3]
         depth_image = capture.transformed_depth
+        if (hasattr(capture, "depth_confidence")):
+            depth_confidence = capture.depth_confidence
 
         color_image = np.ascontiguousarray(color_image)
 
         cv2.imshow("Color Image", color_image)
         cv2.imshow("Depth Image", depth_image)
+        if (depth_confidence is not None):
+            cv2.imshow("Depth Confidence", np.round((depth_confidence / 100 * 255)).astype(np.uint16))
 
         write_bgr(frames_dir, frame_id, color_image, "png")
         write_depth(frames_dir, frame_id, depth_image)
+        if (depth_confidence is not None):
+            write_confidence(frames_dir, frame_id, depth_confidence)
 
         data_file.write("{0},{1}\n".format(frame_id, cur_timestamp))
 
@@ -97,6 +103,7 @@ class DataCapturer():
         scene_meta = {}
         scene_meta['cam_scale'] = 0.001
         scene_meta['camera'] = self.camera_name
+        scene_meta['camera_type'] = self.capture_device.device_type
         with open(scene_meta_file, "w") as f:
             yaml.dump(scene_meta, f)
 

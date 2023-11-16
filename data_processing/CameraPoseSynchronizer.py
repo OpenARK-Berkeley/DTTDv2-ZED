@@ -15,7 +15,7 @@ sys.path.append(os.path.join(dir_path, ".."))
 from calculate_extrinsic import CameraOptiExtrinsicCalculator
 from utils.camera_utils import load_frame_intrinsics, load_frame_distortions, write_scene_distortions, write_scene_intrinsics
 from utils.depth_utils import filter_depths_valid_percentage
-from utils.frame_utils import calculate_aruco_from_bgr_and_depth, load_bgr, load_depth, transfer_color, transfer_depth, get_color_ext
+from utils.frame_utils import calculate_aruco_from_bgr_and_depth, load_bgr, load_depth, transfer_color, transfer_depth, transfer_confidence, get_color_ext
 
 class CameraPoseSynchronizer():
     def __init__(self):
@@ -44,6 +44,7 @@ class CameraPoseSynchronizer():
             scene_metadata = yaml.safe_load(file)
 
         camera_name = scene_metadata["camera"]
+        camera_type = scene_metadata["camera_type"]
         cam_scale = scene_metadata["cam_scale"]
         
         rotation_x_key = 'camera_Rotation_X'
@@ -276,6 +277,8 @@ class CameraPoseSynchronizer():
                 new_frame_ext = "jpg" if to_jpg else "png"
                 transfer_color(raw_frames_dir, old_frame_id, raw_frames_ext, output_frames_dir, new_frame_id, new_frame_ext)
                 transfer_depth(raw_frames_dir, old_frame_id, output_frames_dir, new_frame_id)
+                if camera_type == "zed_2":
+                    transfer_confidence(raw_frames_dir, old_frame_id, output_frames_dir, new_frame_id)
 
             new_camera_intrinsics_dict[new_frame_id] = camera_intrinsics_dict[old_frame_id]
             new_camera_distortions_dict[new_frame_id] = camera_distortions_dict[old_frame_id]

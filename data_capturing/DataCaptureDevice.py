@@ -63,18 +63,21 @@ class DataCaptureDevice():
             runtime_parameters = sl.RuntimeParameters(enable_fill_mode=False)
             # point cloud and depth are aligned on the left image
             left_image = sl.Mat() # H * W * 4 (R,G,B,A)
-            point_cloud = sl.Mat() # H * W * 4 (X,Y,Z,?) (mm, as specified above in init)
+            # point_cloud = sl.Mat() # H * W * 4 (X,Y,Z,?) (mm, as specified above in init)
             depth = sl.Mat() # H * W (mm)
+            confidence_map = sl.Mat() # H * W
             if not (self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS):
                 return None
             self.zed.retrieve_image(left_image, sl.VIEW.LEFT)
+            color_timestamp_usec = self.zed.get_timestamp(sl.TIME_REFERENCE.IMAGE).get_microseconds()
             self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
-            self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
-            color_timestamp_usec = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT).get_microseconds()
+            self.zed.retrieve_measure(confidence_map, sl.MEASURE.CONFIDENCE)
             color = np.copy(left_image.get_data()) # get numpy array
             transformed_depth = np.copy(np.round(depth.get_data()).astype(np.uint16))
-            CaptureData = NamedTuple('CaptureData', color=np.ndarray, color_timestamp_usec=int, transformed_depth=np.ndarray)
-            return CaptureData(color, color_timestamp_usec, transformed_depth)
+            depth_confidence = np.copy(np.round(confidence_map.get_data()).astype(np.uint16))
+            depth_confidence = 100 - depth_confidence # pixels with an original value of 100 were least trusted
+            CaptureData = NamedTuple('CaptureData', color=np.ndarray, color_timestamp_usec=int, transformed_depth=np.ndarray, depth_confidence=np.ndarray)
+            return CaptureData(color, color_timestamp_usec, transformed_depth, depth_confidence)
 
     def stop_camera(self):
         if self.device_type == "azure_kinect":

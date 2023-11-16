@@ -13,7 +13,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(dir_path, ".."))
 
 from utils.affine_utils import affine_matrix_from_rotmat_trans, invert_affine
-from utils.frame_utils import write_rgb, write_depth, write_label, write_meta
+from utils.frame_utils import write_rgb, write_depth, write_label, write_meta, write_confidence
 from utils.object_utils import load_object_meshes, load_object_meshes_trimesh
 
 class SyntheticDataGenerator:
@@ -62,11 +62,14 @@ class SyntheticDataGenerator:
             self._objects[obj_id] = object_data
 
     @staticmethod
-    def _write_data(data_dir, frame_id, color, depth, label, frame_metadata):
+    def _write_data(data_dir, frame_id, color, depth, label, frame_metadata, generate_confidence=False):
         write_rgb(data_dir, frame_id, color, "jpg")
         write_depth(data_dir, frame_id, depth)
         write_label(data_dir, frame_id, label)
         write_meta(data_dir, frame_id, frame_metadata)
+        if generate_confidence:
+            print("WARNING: Using generated depth confidence map")
+            write_confidence(data_dir, frame_id, np.ones(depth.shape) * 100)
 
     def generate_synthetic_scene(self, output_scene_dir, num_frames, intr_file=None, cam_width=1280, cam_height=720):
         assert(os.path.exists(output_scene_dir))

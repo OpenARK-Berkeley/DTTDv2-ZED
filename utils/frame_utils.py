@@ -5,7 +5,7 @@ import open3d as o3d
 from PIL import Image
 import shutil
 
-import os, sys 
+import os, sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(dir_path, ".."))
 
@@ -92,6 +92,20 @@ def transfer_depth(old_frames_dir, old_frame_id, new_frames_dir, new_frame_id):
     new_frame_name = os.path.join(new_frames_dir, str(new_frame_id).zfill(5) + "_depth.png")
     shutil.copyfile(old_frame_name, new_frame_name)
 
+def write_confidence(frames_dir, frame_id, frame):
+    assert(frame.dtype == np.uint16)
+    frame_name = os.path.join(frames_dir, str(frame_id).zfill(5) + "_confidence.png")
+    cv2.imwrite(frame_name, frame)
+
+def load_confidence(frames_dir, frame_id):
+    frame = cv2.imread(os.path.join(frames_dir, str(frame_id).zfill(5) + "_confidence.png"), cv2.IMREAD_UNCHANGED)
+    return frame
+
+def transfer_confidence(old_frames_dir, old_frame_id, new_frames_dir, new_frame_id):
+    old_frame_name = os.path.join(old_frames_dir, str(old_frame_id).zfill(5) + "_confidence.png")
+    new_frame_name = os.path.join(new_frames_dir, str(new_frame_id).zfill(5) + "_confidence.png")
+    shutil.copyfile(old_frame_name, new_frame_name)
+
 def load_o3d_rgb(frames_dir, frame_id, ext):
     validate_extension(ext)
     path = os.path.join(frames_dir, str(frame_id).zfill(5) + "_color.{0}".format(ext))
@@ -135,12 +149,12 @@ def calculate_aruco_from_bgr_and_depth(bgr, depth, depth_scale, camera_matrix, c
             print("Warning, multiple ARUCO's detected. Returning None.")
             return None
         # Estimate pose of each marker and return the values rvec and tvec---different from camera coefficients
-        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners[0], 0.02, camera_matrix,
+        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners[0], 0.15, camera_matrix,
                                                                     camera_dist)
         #1x3
         rvec = np.squeeze(rvec, axis = 1)
         #1x3
-        tvec = np.squeeze(tvec, axis = 1) * 9
+        tvec = np.squeeze(tvec, axis = 1)
 
         #refine with Azure Kinect depth
         center_projected, _ = cv2.projectPoints(tvec, np.array([[0, 0, 0]]).astype(np.float32), np.array([0, 0, 0]).astype(np.float32), camera_matrix, camera_dist)
