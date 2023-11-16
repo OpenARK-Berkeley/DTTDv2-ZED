@@ -73,7 +73,8 @@ class DataCapturer():
         cv2.imshow("Color Image", color_image)
         cv2.imshow("Depth Image", depth_image)
         if (depth_confidence is not None):
-            cv2.imshow("Depth Confidence", np.round((depth_confidence / 100 * 255)).astype(np.uint16))
+            temp = np.round(depth_confidence.astype(np.float16) / 100 * 255)
+            cv2.imshow("Depth Confidence", cv2.cvtColor(temp.astype(np.uint8), cv2.COLOR_GRAY2BGR))
 
         write_bgr(frames_dir, frame_id, color_image, "png")
         write_depth(frames_dir, frame_id, depth_image)

@@ -157,16 +157,16 @@ def calculate_aruco_from_bgr_and_depth(bgr, depth, depth_scale, camera_matrix, c
         tvec = np.squeeze(tvec, axis = 1)
 
         #refine with Azure Kinect depth
-        center_projected, _ = cv2.projectPoints(tvec, np.array([[0, 0, 0]]).astype(np.float32), np.array([0, 0, 0]).astype(np.float32), camera_matrix, camera_dist)
-        center_projected = center_projected.squeeze()
-        center_x, center_y = center_projected
+        # center_projected, _ = cv2.projectPoints(tvec, np.array([[0, 0, 0]]).astype(np.float32), np.array([0, 0, 0]).astype(np.float32), camera_matrix, camera_dist)
+        # center_projected = center_projected.squeeze()
+        # center_x, center_y = center_projected
 
-        center_x, center_y = int(center_x), int(center_y)
-        center_depth = np.array([depth[center_y, center_x] * depth_scale])
+        # center_x, center_y = int(center_x), int(center_y)
+        # center_depth = np.array([depth[center_y, center_x] * depth_scale])
 
-        center_pt = tvec / tvec[0, 2] * center_depth
+        # center_pt = tvec / tvec[0, 2] * center_depth
 
-        tvec = center_pt
+        # tvec = center_pt
 
         return (rvec, tvec, corners)
 

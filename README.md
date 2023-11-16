@@ -139,7 +139,7 @@ Link to tutorial video: https://youtu.be/ioKmeriW650.
 	  4. Press `q` when finished
   4. Stop OptiTrack recording
   5. Export OptiTrack recording to a CSV file with 60Hz report rate.
-  6. Move tracking CSV file to `<scene name>/camera_poses/camera_pose.csv`
+  6. Move tracking CSV file to `<scene name>/camera_poses/camera_poses.csv`
 
 ### Process Extrinsic Data to Calculate Extrinsic (If extrinsic scene)
   1. Clean raw opti poses (`tools/process_data.py --extrinsic`) 

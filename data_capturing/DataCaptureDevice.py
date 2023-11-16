@@ -72,6 +72,7 @@ class DataCaptureDevice():
             color_timestamp_usec = self.zed.get_timestamp(sl.TIME_REFERENCE.IMAGE).get_microseconds()
             self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
             self.zed.retrieve_measure(confidence_map, sl.MEASURE.CONFIDENCE)
+            # self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
             color = np.copy(left_image.get_data()) # get numpy array
             transformed_depth = np.copy(np.round(depth.get_data()).astype(np.uint16))
             depth_confidence = np.copy(np.round(confidence_map.get_data()).astype(np.uint16))

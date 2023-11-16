@@ -32,7 +32,7 @@ def fill_missing(
 def norm2bgr(norm):
     norm = ((norm + 1.0) * 127).astype("uint8")
     return norm
-
+# Notice: This function does not filter out the value when depth_valid is 0.
 def filter_depths_valid_percentage(depth_valid):
 
     rolling_window_size = 10

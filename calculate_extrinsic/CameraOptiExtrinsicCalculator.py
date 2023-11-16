@@ -224,7 +224,7 @@ class CameraOptiExtrinsicCalculator():
 
             rvec, tvec = rotvec_trans_from_affine_matrix(aruco_to_sensor)
 
-            cv2.aruco.drawAxis(frame, camera_intrinsics_dict[frame_id], camera_distortion_coefficients_dict[frame_id], rvec, tvec / 9, 0.01)  # Draw Axis
+            cv2.aruco.drawAxis(frame, camera_intrinsics_dict[frame_id], camera_distortion_coefficients_dict[frame_id], rvec, tvec, 0.05)  # Draw Axis
 
             #NOTE: Here, we use cv2.aruco.estimatePoseSingleMarkers instead of our own aruco pose function in order to get a less influenced visualization
             aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
@@ -237,13 +237,13 @@ class CameraOptiExtrinsicCalculator():
                 assert(len(ids) == 1)
                 corners = corners[0]  # Iterate in markers
                 # Estimate pose of each marker and return the values rvec and tvec---different from camera coefficients
-                rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners, 0.02, camera_intrinsics_dict[frame_id], camera_distortion_coefficients_dict[frame_id])
+                rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners, 0.15, camera_intrinsics_dict[frame_id], camera_distortion_coefficients_dict[frame_id])
 
                 #the aruco estimator assumes the marker is of size 5cmx5cm, we are using a marker of size 15cmx15cm
                 rvec = rvec.squeeze()
                 tvec = tvec.squeeze()
 
-                cv2.aruco.drawAxis(frame_2, camera_intrinsics_dict[frame_id], camera_distortion_coefficients_dict[frame_id], rvec, tvec, 0.01)  # Draw Axis
+                cv2.aruco.drawAxis(frame_2, camera_intrinsics_dict[frame_id], camera_distortion_coefficients_dict[frame_id], rvec, tvec, 0.05)  # Draw Axis
 
             cv2.imshow("original ARUCO", frame_2)
             cv2.imshow("computed extrinsic validation", frame)
